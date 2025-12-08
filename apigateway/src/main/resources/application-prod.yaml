@@ -1,0 +1,56 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: api-gateway
+
+  cloud:
+    gateway:
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowedOrigins: "*"
+            allowedHeaders: "*"
+            allowedMethods: "*"
+      default-filters:
+        - DedupeResponseHeader=Access-Control-Allow-Origin Access-Control-Allow-Credentials
+
+      routes:
+
+        - id: user-service
+          uri: http://user-service:8082
+          predicates:
+            - Path=/api/v1/users/**
+
+        - id: task-service
+          uri: http://task-service:8081
+          predicates:
+            - Path=/api/v1/tasks/**
+          filters:
+            - JwtAuthenticationFilter
+
+        - id: user-service-swagger
+          uri: http://user-service:8082
+          predicates:
+            - Path=/user-service/v3/api-docs
+          filters:
+            - StripPrefix=1
+
+        - id: task-service-swagger
+          uri: http://task-service:8081
+          predicates:
+            - Path=/task-service/v3/api-docs
+          filters:
+            - StripPrefix=1
+
+springdoc:
+  swagger-ui:
+    urls:
+      - name: User API via Gateway
+        url: http://localhost:8080/user-service/v3/api-docs
+      - name: Task API via Gateway
+        url: http://localhost:8080/task-service/v3/api-docs
+
+jwt:
+  secret: "super-secret-key-please-change-it"
